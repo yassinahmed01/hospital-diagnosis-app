@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitoring Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .btn-group-custom {
+            margin-bottom: 20px;
+        }
+        .search-box {
+            max-width: 250px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Classification Monitoring</h2>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="btn-group btn-group-custom">
+            <a href="{{ url_for('home_bp.home') }}" class="btn btn-outline-secondary">← Home</a>
+            <a href="{{ url_for('export_bp.export_records') }}" class="btn btn-success">Export to CSV</a>
+            <a href="{{ url_for('logout_bp.logout') }}" class="btn btn-outline-danger">Logout</a>
+        </div>
+        <input type="text" class="form-control search-box" placeholder="Search records..." id="searchInput">
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h4>Prediction Counts</h4>
+            <ul class="list-group">
+                {% for label, count in counts.items() %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ label }}
+                        <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="col-md-6 text-center">
+            <h4>Prediction Distribution</h4>
+            <div class="bg-light p-2 rounded shadow-sm">
+                <img src="{{ url_for('static', filename='uploads/chart.png') }}" class="img-fluid rounded" alt="Classification Chart">
+            </div>
+        </div>
+    </div>
+
+    
+
+    <hr>
+
+    <h4 class="mt-4">Recent Classification Records</h4>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" id="recordsTable">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Doctor</th>
+                    <th>Patient</th>
+                    <th>Patient ID</th>
+                    <th>Prediction</th>
+                    <th>Confidence</th>
+                    <th>Timestamp</th>
+                    <th>Image</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.id }}</td>
+                    <td>{{ record.doctor_name }}</td>
+                    <td>{{ record.patient_name }}</td>
+                    <td>{{ record.patient_id }}</td>
+                    <td>{{ record.prediction }}</td>
+                    <td>{{ '%.2f' % record.confidence }}%</td>
+                    <td>{{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <img src="{{ url_for('static', filename='uploads/' + record.image_filename) }}"
+                             class="img-thumbnail" style="width: 80px;" alt="Uploaded Image">
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('delete_bp.delete_record', record_id=record.id) }}" onsubmit="return confirm('Are you sure you want to delete this record?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const searchInput = document.getElementById("searchInput");
+    const rows = document.querySelectorAll("#recordsTable tbody tr");
+
+    searchInput.addEventListener("keyup", function () {
+        const searchTerm = this.value.toLowerCase();
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            row.style.display = rowText.includes(searchTerm) ? "" : "none";
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
